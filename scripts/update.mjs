@@ -79,6 +79,7 @@ async function writeBriefs(items) {
       if (text) c.snippet = text;
     }),
   );
+  items = items.filter((c) => !/^Hacker News 讨论/.test(c.snippet || ''));
   const { data, model } = await chatJSON({ system: SYSTEM, user: briefsPrompt(items), tier: 'fast' });
   const byId = new Map(items.map((c) => [c.id, c]));
   const out = (data.items || [])
