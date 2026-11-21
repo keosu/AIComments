@@ -16,7 +16,7 @@
 
 1. 把仓库推送到 GitHub（仓库名默认按 `AIComments` 处理，换别的名字也行，部署时会自动识别路径）。
 2. **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
-3. **Settings → Secrets and variables → Actions** 里至少配置一个大模型密钥（建议配两个，互为备用）：
+3. **（可选）** 不配置任何密钥也能运行：默认使用无需密钥的公开接口，依次为 OVHcloud AI Endpoints（DeepSeek-V4.1-Flash，每 IP 每分钟 2 次）、Pollinations（每 IP 每 45 秒 1 次）、Kilo Gateway 免费模型。它们按 IP 限流、不保证可用，生成质量也取决于当时落到哪个模型。想要更稳定、质量更好，可以在 **Settings → Secrets and variables → Actions** 里配置下列任一密钥，配置后会被优先使用：
 
    | Secret | 说明 | 申请地址 |
    | --- | --- | --- |
@@ -31,7 +31,7 @@
 4. 推送后，**Deploy site** 工作流会自动构建并发布初始内容。
 5. 在 **Actions → Update content → Run workflow** 手动触发一次，生成第一期内容。之后会在每周二、周五北京时间 07:30 自动运行。
 
-> GitHub Models 已于 2026 年 7 月停止服务，所以需要自行配置上面任一免费接口。各家免费模型名单会变动，失效时修改 `config/llm.json` 中的模型名即可，也可以用 `GEMINI_MODEL`、`ZHIPU_MODEL_FAST` 这类 Variables 覆盖。
+> GitHub Models 已于 2026 年 7 月停止服务。免费接口和匿名接口的名单都会变动，失效时修改 `config/llm.json` 中的模型名即可，也可以用 `GEMINI_MODEL`、`ZHIPU_MODEL_FAST` 这类 Variables 覆盖。
 
 ## 工作原理
 

@@ -1,6 +1,6 @@
 {
-  "$comment": "按 order 顺序尝试已配置密钥的提供方，失败自动回退。模型名可用环境变量覆盖：<NAME>_MODEL / <NAME>_MODEL_FAST（如 GEMINI_MODEL）；顺序可用 LLM_ORDER 覆盖（逗号分隔）。免费模型名单会变动，失效时改这里即可。",
-  "order": ["gemini", "zhipu", "openrouter", "custom", "groq"],
+  "$comment": "按 order 顺序尝试可用的提供方，失败自动回退。keyless 的提供方无需任何密钥即可使用（按 IP 限流）；其余需在 Secrets 中配置密钥。模型名可用环境变量覆盖：<NAME>_MODEL / <NAME>_MODEL_FAST（如 GEMINI_MODEL）；顺序可用 LLM_ORDER 覆盖（逗号分隔）。免费模型名单会变动，失效时改这里即可。",
+  "order": ["gemini", "zhipu", "openrouter", "custom", "groq", "ovh", "pollinations", "kilo"],
   "searchOrder": ["tavily", "exa", "hn"],
   "providers": {
     "gemini": {
@@ -52,6 +52,40 @@
       "maxTokens": 4000,
       "minIntervalMs": 2500,
       "jsonMode": true
+    },
+    "ovh": {
+      "$comment": "OVHcloud AI Endpoints 匿名访问：每 IP 每模型每分钟 2 次，声明不存储数据。配置 OVH_AI_ENDPOINTS_ACCESS_TOKEN 可提高限额。",
+      "keyless": true,
+      "keyEnv": "OVH_AI_ENDPOINTS_ACCESS_TOKEN",
+      "baseURL": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+      "strong": "DeepSeek-V4.1-Flash-1017",
+      "fast": "DeepSeek-V4.1-Flash-1017",
+      "maxInputChars": 60000,
+      "maxTokens": 8000,
+      "minIntervalMs": 31000,
+      "jsonMode": false
+    },
+    "pollinations": {
+      "$comment": "Pollinations 匿名访问：每 IP 每 45 秒 1 次。",
+      "keyless": true,
+      "baseURL": "https://text.pollinations.ai/openai",
+      "strong": "openai-fast",
+      "fast": "openai-fast",
+      "maxInputChars": 30000,
+      "maxTokens": 6000,
+      "minIntervalMs": 46000,
+      "jsonMode": false
+    },
+    "kilo": {
+      "$comment": "Kilo Gateway 匿名访问 :free 模型：每 IP 每小时约 200 次，上游可能限流。",
+      "keyless": true,
+      "baseURL": "https://ai-gateway.kilo.ai/api/v1",
+      "strong": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "fast": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "maxInputChars": 40000,
+      "maxTokens": 8000,
+      "minIntervalMs": 5000,
+      "jsonMode": false
     }
   }
 }

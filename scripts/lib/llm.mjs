@@ -10,7 +10,7 @@ function resolveProvider(name) {
   const N = name.toUpperCase();
   const strong = process.env[`${N}_MODEL`] || (p.strongEnv && process.env[p.strongEnv]) || p.strong;
   const fast = process.env[`${N}_MODEL_FAST`] || (p.fastEnv && process.env[p.fastEnv]) || p.fast || strong;
-  if (!key || !baseURL || !strong) return null;
+  if ((!key && !p.keyless) || !baseURL || !strong) return null;
   return {
     name,
     key,
@@ -21,6 +21,7 @@ function resolveProvider(name) {
     maxTokens: p.maxTokens || 4000,
     minIntervalMs: p.minIntervalMs || 0,
     jsonMode: !!p.jsonMode,
+    keyless: !!p.keyless,
   };
 }
 
@@ -70,7 +71,8 @@ async function callOnce(p, { messages, tier, json, temperature, maxTokens }) {
   };
   if (json && p.jsonMode) body.response_format = { type: 'json_object' };
   await throttle(p);
-  const headers = { 'content-type': 'application/json', authorization: `Bearer ${p.key}` };
+  const headers = { 'content-type': 'application/json' };
+  if (p.key) headers.authorization = `Bearer ${p.key}`;
   if (p.name === 'openrouter') {
     headers['HTTP-Referer'] = 'https://github.com';
     headers['X-Title'] = 'AI Frontier Notes';
@@ -85,6 +87,7 @@ async function callOnce(p, { messages, tier, json, temperature, maxTokens }) {
   if (!res.ok) {
     const err = new Error(`${p.name}/${model} HTTP ${res.status}: ${text.slice(0, 300)}`);
     err.status = res.status;
+    err.retryAfter = Number(res.headers.get('retry-after')) || 0;
     throw err;
   }
   const data = JSON.parse(text);
@@ -117,9 +120,12 @@ export async function chat({ system, user, tier = 'strong', json = false, temper
       } catch (e) {
         errors.push(e.message);
         log(`  ! ${e.message.slice(0, 200)}`);
-        const retryable = e.status === 429 || e.status >= 500 || e.name === 'TimeoutError';
+        const limited = e.status === 429 || (e.status === 402 && !p.key);
+        const retryable = limited || e.status >= 500 || e.name === 'TimeoutError';
         if (!retryable || attempt === 1) break;
-        await sleep(e.status === 429 ? 20_000 : 5_000);
+        const wait = limited ? Math.max(e.retryAfter * 1000, p.minIntervalMs, 20_000) : 5_000;
+        if (wait > 90_000) break;
+        await sleep(wait);
       }
     }
   }

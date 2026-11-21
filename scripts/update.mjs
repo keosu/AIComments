@@ -105,7 +105,8 @@ async function writeEssay(spec, byId) {
   const a = parseArticle(text);
   if (!a.title || cjk(a.body) < MIN_CJK.essay) throw new Error(`评论质量不达标（${cjk(a.body)} 字）`);
   const { body, sources } = linkCitations(a.body, materials);
-  save('essay', { title: a.title, date: today, summary: a.summary, tags: a.tags, generated: true, model, sources }, body, a.slug);
+  const allSources = materials.map((m, i) => ({ n: i + 1, title: m.title, url: m.url }));
+  save('essay', { title: a.title, date: today, summary: a.summary, tags: a.tags, generated: true, model, sources: sources.length ? sources : allSources }, body, a.slug);
   return cands.map((c) => c.key);
 }
 
@@ -191,7 +192,9 @@ async function writePrimer() {
   }
   const raw = parts.join('\n\n');
   if (cjk(raw) < MIN_CJK.primer) throw new Error(`原理长文过短（${cjk(raw)} 字）`);
-  const { body, sources } = linkCitations(raw, materials);
+  const linked = linkCitations(raw, materials);
+  const body = linked.body;
+  const sources = linked.sources.length ? linked.sources : materials.map((m, i) => ({ n: i + 1, title: m.title, url: m.url }));
   save('primer', {
     title: outline.title || topic,
     date: today,
