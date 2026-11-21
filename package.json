@@ -1,0 +1,27 @@
+{
+  "name": "ai-frontier-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI 前沿评论：偏思考与深度的 AI 专业站点，GitHub Actions 自动更新，部署于 GitHub Pages",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs",
+    "update": "node scripts/update.mjs",
+    "update:dry": "node scripts/update.mjs --dry",
+    "collect": "node scripts/update.mjs --collect-only"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.10.0",
+    "katex": "^0.16.11",
+    "marked": "^15.0.0",
+    "marked-highlight": "^2.2.1",
+    "marked-katex-extension": "^5.1.4"
+  }
+}

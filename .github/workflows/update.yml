@@ -1,0 +1,85 @@
+name: Update content
+
+on:
+  schedule:
+    # 北京时间每周二、周五 07:30（UTC 周一、周四 23:30）
+    - cron: '30 23 * * 1,4'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: '只生成部分栏目（briefs,essay,research,viewpoint,primer 逗号分隔；留空为全部）'
+        required: false
+        default: ''
+      force_primer:
+        description: '本次强制生成一篇「原理与实践」长文'
+        type: boolean
+        default: false
+      primer_topic:
+        description: '指定原理长文主题（可选，留空则按 config/primer-topics.json 顺序）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-content
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate content
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_MODEL_FAST: ${{ vars.LLM_MODEL_FAST }}
+          LLM_ORDER: ${{ vars.LLM_ORDER }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          UPDATE_ONLY: ${{ inputs.only }}
+          FORCE_PRIMER: ${{ inputs.force_primer }}
+          PRIMER_TOPIC: ${{ inputs.primer_topic }}
+        run: node scripts/update.mjs
+
+      - name: Commit
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "没有新内容"
+          else
+            git commit -m "content: update $(TZ=Asia/Shanghai date +%F)"
+            git pull --rebase
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: update
+    if: needs.update.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

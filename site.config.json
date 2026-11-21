@@ -1,0 +1,26 @@
+{
+  "title": "AI 前沿评论",
+  "shortTitle": "前沿评论",
+  "subtitle": "Frontier Notes on AI",
+  "tagline": "不追快讯，只做思考。关于大模型、世界模型、关键方法与技术走向的深度评述。",
+  "description": "AI 前沿评论：聚焦大模型、世界模型、关键方法与领域人物观点的深度评论站点。每周两更，偏思考、偏系统，不做新闻快餐。",
+  "language": "zh-CN",
+  "url": "https://keosu.github.io/AIComments",
+  "author": "AI 前沿评论编辑部",
+  "cadence": "每周二、周五更新",
+  "colors": {
+    "light": "#f5f6f8",
+    "dark": "#090c14"
+  },
+  "focus": ["大模型", "世界模型", "推理", "强化学习", "智能体", "具身智能", "可解释性", "AI 基础设施"],
+  "update": {
+    "timezone": "Asia/Shanghai",
+    "windowDays": 6,
+    "maxCandidates": 70,
+    "briefs": { "min": 5, "max": 10 },
+    "essays": 1,
+    "research": 2,
+    "viewpoints": 1,
+    "primerEveryDays": 28
+  }
+}

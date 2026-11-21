@@ -1,0 +1,57 @@
+{
+  "$comment": "按 order 顺序尝试已配置密钥的提供方，失败自动回退。模型名可用环境变量覆盖：<NAME>_MODEL / <NAME>_MODEL_FAST（如 GEMINI_MODEL）；顺序可用 LLM_ORDER 覆盖（逗号分隔）。免费模型名单会变动，失效时改这里即可。",
+  "order": ["gemini", "zhipu", "openrouter", "custom", "groq"],
+  "searchOrder": ["tavily", "hn"],
+  "providers": {
+    "gemini": {
+      "keyEnv": "GEMINI_API_KEY",
+      "baseURL": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "strong": "gemini-3.8-flash",
+      "fast": "gemini-3.5-flash-lite",
+      "maxInputChars": 120000,
+      "maxTokens": 16000,
+      "minIntervalMs": 13000,
+      "jsonMode": true
+    },
+    "zhipu": {
+      "keyEnv": "ZHIPU_API_KEY",
+      "baseURL": "https://open.bigmodel.cn/api/paas/v4",
+      "strong": "glm-4.7-flash",
+      "fast": "glm-4-flash-250414",
+      "maxInputChars": 80000,
+      "maxTokens": 16000,
+      "minIntervalMs": 2000,
+      "jsonMode": false
+    },
+    "openrouter": {
+      "keyEnv": "OPENROUTER_API_KEY",
+      "baseURL": "https://openrouter.ai/api/v1",
+      "strong": "openrouter/free",
+      "fast": "openrouter/free",
+      "maxInputChars": 60000,
+      "maxTokens": 12000,
+      "minIntervalMs": 3500,
+      "jsonMode": false
+    },
+    "custom": {
+      "keyEnv": "LLM_API_KEY",
+      "baseURLEnv": "LLM_BASE_URL",
+      "strongEnv": "LLM_MODEL",
+      "fastEnv": "LLM_MODEL_FAST",
+      "maxInputChars": 60000,
+      "maxTokens": 8000,
+      "minIntervalMs": 0,
+      "jsonMode": false
+    },
+    "groq": {
+      "keyEnv": "GROQ_API_KEY",
+      "baseURL": "https://api.groq.com/openai/v1",
+      "strong": "openai/gpt-oss-120b",
+      "fast": "openai/gpt-oss-120b",
+      "maxInputChars": 9000,
+      "maxTokens": 4000,
+      "minIntervalMs": 2500,
+      "jsonMode": true
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$comment": "weight 越高越优先进入候选；抓取失败的源会被跳过，不影响整体。",
+  "feeds": [
+    { "name": "OpenAI", "url": "https://openai.com/news/rss.xml", "kind": "news", "weight": 2.5 },
+    { "name": "Google DeepMind", "url": "https://deepmind.google/blog/rss.xml", "kind": "news", "weight": 3 },
+    { "name": "Google Research", "url": "https://research.google/blog/rss/", "kind": "blog", "weight": 2 },
+    { "name": "Microsoft Research", "url": "https://www.microsoft.com/en-us/research/feed/", "kind": "blog", "weight": 1.5 },
+    { "name": "Hugging Face Blog", "url": "https://huggingface.co/blog/feed.xml", "kind": "blog", "weight": 2 },
+    { "name": "BAIR", "url": "https://bair.berkeley.edu/blog/feed.xml", "kind": "blog", "weight": 2 },
+    { "name": "Lil'Log", "url": "https://lilianweng.github.io/index.xml", "kind": "blog", "weight": 3 },
+    { "name": "Interconnects", "url": "https://www.interconnects.ai/feed", "kind": "analysis", "weight": 3 },
+    { "name": "Import AI", "url": "https://importai.substack.com/feed", "kind": "analysis", "weight": 2.5 },
+    { "name": "Ahead of AI", "url": "https://magazine.sebastianraschka.com/feed", "kind": "analysis", "weight": 2.5 },
+    { "name": "Simon Willison", "url": "https://simonwillison.net/atom/everything/", "kind": "analysis", "weight": 1.5 },
+    { "name": "The Gradient", "url": "https://thegradient.pub/rss/", "kind": "analysis", "weight": 2 },
+    { "name": "MIT Technology Review", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed", "kind": "news", "weight": 1.5 },
+    { "name": "量子位", "url": "https://www.qbitai.com/feed", "kind": "news", "weight": 1 },
+    { "name": "Dwarkesh Podcast", "url": "https://www.dwarkesh.com/feed", "kind": "viewpoint", "weight": 2.5 },
+    { "name": "Latent Space", "url": "https://www.latent.space/feed", "kind": "viewpoint", "weight": 2 },
+    { "name": "Andrej Karpathy", "url": "https://karpathy.bearblog.dev/feed/", "kind": "viewpoint", "weight": 3 },
+    { "name": "Sam Altman", "url": "https://blog.samaltman.com/posts.atom", "kind": "viewpoint", "weight": 2.5 },
+    { "name": "Lex Fridman Podcast", "url": "https://lexfridman.com/feed/podcast/", "kind": "viewpoint", "weight": 1.5 },
+    { "name": "Gary Marcus", "url": "https://garymarcus.substack.com/feed", "kind": "viewpoint", "weight": 1.5 }
+  ],
+  "huggingfacePapers": {
+    "enabled": true,
+    "perDay": 50,
+    "keep": 25,
+    "weight": 2.5
+  },
+  "hackerNews": {
+    "enabled": true,
+    "minPoints": 150,
+    "weight": 1.5,
+    "queries": ["LLM", "OpenAI", "Anthropic", "DeepSeek", "Gemini", "Qwen", "language model", "AI agent", "transformer", "reasoning model", "world model", "robotics foundation model", "embodied AI", "interview AI researcher"]
+  },
+  "webSearch": {
+    "enabled": true,
+    "queries": [
+      "major AI model releases this week",
+      "large language model research breakthrough this week"
+    ]
+  }
+}
