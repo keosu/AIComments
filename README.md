@@ -16,7 +16,7 @@
 
 1. 把仓库推送到 GitHub（仓库名默认按 `AIComments` 处理，换别的名字也行，部署时会自动识别路径）。
 2. **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
-3. **（可选）** 不配置任何密钥也能运行：默认使用无需密钥的公开接口，依次为 OVHcloud AI Endpoints（DeepSeek-V4.1-Flash，每 IP 每分钟 2 次）、Pollinations（每 IP 每 45 秒 1 次）、Kilo Gateway 免费模型。它们按 IP 限流、不保证可用，生成质量也取决于当时落到哪个模型。想要更稳定、质量更好，可以在 **Settings → Secrets and variables → Actions** 里配置下列任一密钥，配置后会被优先使用：
+3. **（强烈建议）** 配置一个免费大模型密钥。不配置也能运行，但只会用无需密钥的公开接口：Pollinations（稳定，但模型较小，只用于选题和要闻）、OVHcloud（匿名额度极低，实测每个 IP 每个模型仅约 1 次）、Kilo Gateway（常被上游限流）。这种情况下通常只能发布要闻，深度文章会因为没有合格的模型而跳过，这是有意为之的“宁缺毋滥”。在 **Settings → Secrets and variables → Actions** 里配置下列任一密钥后，深度栏目才能稳定产出：
 
    | Secret | 说明 | 申请地址 |
    | --- | --- | --- |

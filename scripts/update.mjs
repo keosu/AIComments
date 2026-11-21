@@ -72,6 +72,13 @@ async function gatherMaterials(cands, queries, budget, maxItems = 8) {
 // ---------- Steps ----------
 async function writeBriefs(items) {
   log(`撰写要闻（${items.length} 条）`);
+  await Promise.all(
+    items.map(async (c) => {
+      if (c.snippet && c.snippet.length >= 120 && !/Hacker News/.test(c.snippet)) return;
+      const text = await fetchText(c.url, 900);
+      if (text) c.snippet = text;
+    }),
+  );
   const { data, model } = await chatJSON({ system: SYSTEM, user: briefsPrompt(items), tier: 'fast' });
   const byId = new Map(items.map((c) => [c.id, c]));
   const out = (data.items || [])
@@ -235,11 +242,13 @@ async function main() {
     const budget = inputBudget();
     const perLine = 300;
     const shown = candidates.slice(0, Math.min(U.maxCandidates, Math.floor((budget - 4000) / perLine)));
-    const recent = loadAll().filter((i) => i.type !== 'brief').slice(0, 15).map((i) => i.title);
+    const existing = loadAll();
+    const recent = existing.filter((i) => i.type !== 'brief').slice(0, 15).map((i) => i.title);
+    const recentBriefs = existing.filter((i) => i.type === 'brief').slice(0, 2).flatMap((b) => b.items.map((x) => x.title));
     log(`主编选题（${shown.length} 条候选）…`);
     let plan = { briefs: [], essays: [], research: [] };
     try {
-      plan = (await chatJSON({ system: SYSTEM, user: planPrompt({ date: today, days: U.windowDays, candidates: shown, recent, cfg: U }), tier: 'fast' })).data;
+      plan = (await chatJSON({ system: SYSTEM, user: planPrompt({ date: today, days: U.windowDays, candidates: shown, recent, recentBriefs, cfg: U }), tier: 'fast' })).data;
       shown.forEach((c) => usedKeys.add(c.key));
     } catch (e) {
       errors.push(`选题失败：${e.message}`);

@@ -54,7 +54,7 @@
       "jsonMode": true
     },
     "ovh": {
-      "$comment": "OVHcloud AI Endpoints 匿名访问：每 IP 每模型每分钟 2 次，声明不存储数据。配置 OVH_AI_ENDPOINTS_ACCESS_TOKEN 可提高限额。",
+      "$comment": "OVHcloud AI Endpoints 匿名访问：额度极低（实测每个 IP 每个模型仅约 1 次，之后长期 429），只能作为偶尔可用的后备。配置 OVH_AI_ENDPOINTS_ACCESS_TOKEN 可获得正常额度。",
       "keyless": true,
       "keyEnv": "OVH_AI_ENDPOINTS_ACCESS_TOKEN",
       "baseURL": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
@@ -66,8 +66,9 @@
       "jsonMode": false
     },
     "pollinations": {
-      "$comment": "Pollinations 匿名访问：每 IP 每 45 秒 1 次。",
+      "$comment": "Pollinations 匿名访问：每 IP 每 45 秒 1 次，稳定但模型较小。tiers 限定只用于选题与要闻；删掉 tiers 则也会用它写深度文章（质量明显下降）。",
       "keyless": true,
+      "tiers": ["fast"],
       "baseURL": "https://text.pollinations.ai/openai",
       "strong": "openai-fast",
       "fast": "openai-fast",

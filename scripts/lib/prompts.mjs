@@ -17,7 +17,7 @@ export function materialsBlock(materials) {
     .join('\n\n');
 }
 
-export function planPrompt({ date, days, candidates, recent, cfg }) {
+export function planPrompt({ date, days, candidates, recent, recentBriefs = [], cfg }) {
   const lines = candidates
     .map((c) => `${c.id} | ${c.date ? c.date.toISOString().slice(5, 10) : '--'} | ${c.source} | ${c.kind}${c.metric ? `(${c.metric})` : ''} | ${c.title} | ${truncate(c.snippet || '', 180)}`)
     .join('\n');
@@ -34,6 +34,9 @@ export function planPrompt({ date, days, candidates, recent, cfg }) {
 
 避免与近期已发表的选题重复：
 ${recent.length ? recent.map((t) => `- ${t}`).join('\n') : '（无）'}
+
+近期要闻已报道过的事件（同一事件即使换了来源链接也不要再选入 briefs，除非有实质性新进展）：
+${recentBriefs.length ? recentBriefs.map((t) => `- ${t}`).join('\n') : '（无）'}
 
 只输出 JSON，不要任何解释：
 {"briefs": ["id"], "essays": [{"topic": "", "angle": "", "ids": [""], "queries": [""]}], "research": [{"id": "", "why": ""}], "viewpoints": [{"id": "", "person": "", "why": ""}]}
@@ -65,7 +68,7 @@ export function essayPrompt({ topic, angle, materials }) {
 
 写作要求：
 - 篇幅 2500–4000 字。开头两三句内直接亮出核心判断，不要铺垫背景。
-- 用 3–5 个二级标题（## ）组织论证，以连贯论述为主，必要时使用列表或表格。
+- 用 3–5 个二级标题（## ）组织论证，小标题不要编号；以连贯的段落论述为主，列表和表格只在确有必要时少量使用。
 - 必须包含：对主流叙事的审视（哪里成立、哪里被高估或低估）；技术或经济层面的机制分析；至少一个明确的、未来可以检验的判断，或值得跟踪的信号。
 - 引用材料中的事实时，在句末用 [n] 标注材料编号（可连用，如 [1][3]）。不要输出任何链接，不要引入材料之外的具体数字或事件。
 - 结尾不要写总结式套话。
@@ -100,8 +103,8 @@ export function viewpointPrompt({ person, why, materials }) {
 写作要求：
 - 篇幅 1500–2500 字。
 - 结构：## 背景（此人是谁、在什么场合说的）／ ## 核心观点（3–5 条，逐条概括）／ ## 论证与依据（他凭什么这么认为）／ ## 我们的看法（哪些成立、哪些存疑、有哪些有分量的反对意见）。
-- 直接引语最多 4 处，必须使用如下格式单独成段：
-  > 中文译文（原文：“逐字摘自材料的原文”）
+- 直接引语最多 4 处，每处单独成段，一行写完：先写你翻译的中文，再在括号里附逐字原文。示例（仅示意格式）：
+  > 我们不应把对机构的控制权交出去。（原文：“We should not hand over control of our institutions.”）
   原文必须**逐字**出自材料，不得改写、拼接或凭记忆补充；做不到逐字引用时，改为不带引号的转述。无法逐字核对的引语会被自动删除。
 - 区分“他说了什么”和“我们的推断”，不要把评述者的观点安到人物身上。引用材料事实用 [n] 标注。
 
@@ -187,7 +190,11 @@ export function parseArticle(text) {
       body = t.slice(m[1].length).replace(/^\s*-{3,}\s*\n/, '');
     }
   }
-  const field = (k) => head.match(new RegExp(`^\\s*\\**${k}\\**\\s*[:：]\\s*(.+)$`, 'mi'))?.[1].trim().replace(/^["“《]|["”》]$/g, '') || '';
+  const field = (k) => {
+    const v = head.match(new RegExp(`^\\s*\\**${k}\\**\\s*[:：]\\s*(.+)$`, 'mi'))?.[1].trim() || '';
+    const m = v.match(/^(["“《「])(.*)(["”》」])$/);
+    return m && !/["“”《》「」]/.test(m[2]) ? m[2] : v;
+  };
   body = body.replace(/^#\s+.+\n+/, '').trim();
   return {
     title: field('TITLE'),

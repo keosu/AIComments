@@ -22,6 +22,7 @@ function resolveProvider(name) {
     minIntervalMs: p.minIntervalMs || 0,
     jsonMode: !!p.jsonMode,
     keyless: !!p.keyless,
+    tiers: Array.isArray(p.tiers) ? p.tiers : null,
   };
 }
 
@@ -91,8 +92,10 @@ async function callOnce(p, { messages, tier, json, temperature, maxTokens }) {
     throw err;
   }
   const data = JSON.parse(text);
-  const content = clean(data.choices?.[0]?.message?.content || '');
+  const choice = data.choices?.[0];
+  const content = clean(choice?.message?.content || '');
   if (!content) throw new Error(`${p.name}/${model} returned empty content`);
+  if (choice?.finish_reason === 'length') throw new Error(`${p.name}/${model} output truncated (finish_reason=length)`);
   return { text: content, provider: p.name, model };
 }
 
@@ -103,8 +106,8 @@ export const usage = { calls: 0, byModel: {} };
  * tier: 'fast' (planning/briefs) | 'strong' (long-form writing)
  */
 export async function chat({ system, user, tier = 'strong', json = false, temperature = 0.6, maxTokens }) {
-  const list = providers();
-  if (!list.length) throw new Error('没有可用的大模型提供方：请至少配置 GEMINI_API_KEY、ZHIPU_API_KEY、OPENROUTER_API_KEY、GROQ_API_KEY 或 LLM_API_KEY 之一。');
+  const list = providers().filter((p) => !p.tiers || p.tiers.includes(tier));
+  if (!list.length) throw new Error(`没有适合「${tier === 'strong' ? '深度写作' : '选题与要闻'}」的大模型：请配置 GEMINI_API_KEY、ZHIPU_API_KEY 等任一免费密钥。`);
   const messages = [
     ...(system ? [{ role: 'system', content: system }] : []),
     { role: 'user', content: user },
