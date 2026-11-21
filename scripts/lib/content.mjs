@@ -62,7 +62,9 @@ export function loadAll() {
       });
     }
   }
-  return items.sort((a, b) => (a.date === b.date ? b.slug.localeCompare(a.slug) : b.date.localeCompare(a.date)));
+  return items.sort(
+    (a, b) => b.date.localeCompare(a.date) || (Number(b.priority) || 0) - (Number(a.priority) || 0) || b.slug.localeCompare(a.slug),
+  );
 }
 
 export function loadPage(name) {

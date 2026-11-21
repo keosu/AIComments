@@ -54,6 +54,7 @@ jobs:
           LLM_MODEL_FAST: ${{ vars.LLM_MODEL_FAST }}
           LLM_ORDER: ${{ vars.LLM_ORDER }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
           UPDATE_ONLY: ${{ inputs.only }}
           FORCE_PRIMER: ${{ inputs.force_primer }}
           PRIMER_TOPIC: ${{ inputs.primer_topic }}

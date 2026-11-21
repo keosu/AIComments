@@ -10,7 +10,7 @@
 
 关注方向：大模型、世界模型、推理与强化学习、智能体、具身智能、可解释性、AI 基础设施（首页标签见 `site.config.json` 的 `focus`）。
 
-站点特性：首页动态神经网络背景、按文章自动生成的科技风封面、栏目配色、横屏和竖屏自适应、浅色/深色/跟随系统三种主题、全屏阅读（按 F 键）、PWA（可安装、可离线阅读）、RSS、站内搜索、KaTeX 公式、代码高亮与一键复制。
+站点特性：手机上左右滑动切换栏目、首页动态神经网络背景、按文章自动生成的科技风封面、栏目配色、横屏和竖屏自适应、浅色/深色/跟随系统三种主题、全屏阅读（按 F 键）、PWA（可安装、可离线阅读）、RSS、站内搜索、KaTeX 公式、代码高亮与一键复制。
 
 ## 部署
 
@@ -24,7 +24,8 @@
    | `ZHIPU_API_KEY` | 智谱 GLM Flash 系列，长期免费，中文写作好 | https://open.bigmodel.cn |
    | `OPENROUTER_API_KEY` | `openrouter/free` 自动路由免费模型（每天 50 次） | https://openrouter.ai/keys |
    | `GROQ_API_KEY` | Groq 免费层，作为兜底 | https://console.groq.com/keys |
-   | `TAVILY_API_KEY`（可选） | 联网搜索，用于补充评论背景（每月有免费额度） | https://tavily.com |
+   | `TAVILY_API_KEY`（可选） | 联网搜索，每月 1000 次免费；不配置时自动使用 Tavily 免密钥模式（每日有上限） | https://tavily.com |
+   | `EXA_API_KEY`（可选） | 联网搜索备用，每月 10 美元免费额度、无需绑卡 | https://exa.ai |
 
    也可以接入任意 OpenAI 兼容接口：Secret 填 `LLM_API_KEY`，Variables 填 `LLM_BASE_URL`、`LLM_MODEL`（可选 `LLM_MODEL_FAST`）。
 4. 推送后，**Deploy site** 工作流会自动构建并发布初始内容。
@@ -44,6 +45,25 @@
 ```
 
 大模型按 `config/llm.json` 中的 `order` 依次尝试，遇到限流或报错时自动换下一家；各家的请求间隔按免费额度限制做了节流。
+
+**内容是否最新？** 每次运行都会实时抓取过去 `windowDays`（默认 6）天内的信息源，并联网搜索补充当周动态；选题提示词会注入当天日期，并要求模型只依据材料判断“最新”，不使用训练数据中的旧认知。已用过的链接记录在 `data/seen.json` 中，不会重复选题。
+
+## 迭代指南：常改的配置
+
+| 想调整什么 | 改哪里 |
+| --- | --- |
+| 站名、标语、首页“关注方向”标签、每期各栏目篇数、原理长文间隔 | `site.config.json`（`focus`、`update`） |
+| 文风、立场、写作禁忌、关注范围 | `config/editorial.md`（所有写作调用的系统提示） |
+| 信息源：增删 RSS、调整权重、Hacker News 关键词、联网搜索查询词 | `config/sources.json` |
+| 大模型：换模型名、调整回退顺序、单次输入预算、请求间隔 | `config/llm.json`（也可用仓库 Variables 覆盖，如 `GEMINI_MODEL`、`LLM_ORDER`） |
+| 原理长文选题 | `config/primer-topics.json`（按顺序取用） |
+| 更新频率与时间 | `.github/workflows/update.yml` 中的 `cron`（UTC 时间） |
+| 各类文章的写作结构与字数 | `scripts/lib/prompts.mjs` |
+| 外观：配色、字体、布局 | `src/style.css`（顶部的颜色变量）；封面图案在 `scripts/lib/covers.mjs` |
+| 修改或删除某篇文章 | 直接编辑 `content/` 下对应的 Markdown，推送后自动重新部署 |
+| 让某条链接以后不再入选 / 重新入选 | 在 `data/seen.json` 中添加 / 删除该链接 |
+
+改完推送到 `main` 即自动重新部署；想立即生成一期内容，到 Actions 手动运行 **Update content**。
 
 ## 目录
 

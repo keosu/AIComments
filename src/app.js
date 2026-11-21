@@ -147,6 +147,82 @@
     document.addEventListener('themechange', () => { readColors(); draw(); });
   }
 
+  /* ---------- Swipe between sections ---------- */
+  const navLinks = $$('.nav a');
+  const nav = $('.nav');
+  const current = $('.nav a[aria-current="page"]');
+  if (nav && current && nav.scrollWidth > nav.clientWidth) {
+    nav.scrollLeft = current.offsetLeft - (nav.clientWidth - current.offsetWidth) / 2;
+  }
+  const main = $('#main');
+  const clean = (h) => h.split(/[?#]/)[0];
+  const tabs = [{ href: clean($('.brand')?.href || BASE), label: '首页' }, ...navLinks.map((a) => ({ href: clean(a.href), label: a.textContent.trim() }))];
+  const tabIdx = tabs.findIndex((t) => t.href === clean(location.href));
+
+  const swipeIn = sessionStorage.getItem('swipe');
+  if (swipeIn && main) {
+    sessionStorage.removeItem('swipe');
+    main.classList.add(`swipe-in-${swipeIn}`);
+    main.addEventListener('animationend', () => main.classList.remove(`swipe-in-${swipeIn}`), { once: true });
+  }
+
+  if (tabIdx >= 0 && main && 'ontouchstart' in window) {
+    const hint = Object.assign(document.createElement('div'), { className: 'swipe-hint', hidden: true });
+    document.body.append(hint);
+    let sx = 0, sy = 0, tracking = false, axis = null;
+    const reset = (animate = true) => {
+      main.style.transition = animate ? 'transform .22s ease, opacity .22s ease' : '';
+      main.style.transform = '';
+      main.style.opacity = '';
+      hint.hidden = true;
+    };
+    addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      if (t.clientX < 24 || t.clientX > innerWidth - 24) return;
+      if (e.target.closest('.nav, pre, .table-wrap, .katex-display, input, textarea, .focus, .stats')) return;
+      sx = t.clientX;
+      sy = t.clientY;
+      tracking = true;
+      axis = null;
+      main.style.transition = '';
+    }, { passive: true });
+    addEventListener('touchmove', (e) => {
+      if (!tracking) return;
+      const t = e.touches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (axis === null && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) axis = Math.abs(dx) > Math.abs(dy) * 1.5 ? 'x' : 'y';
+      if (axis !== 'x') return;
+      const target = tabs[dx < 0 ? tabIdx + 1 : tabIdx - 1];
+      main.style.transform = `translateX(${dx * (target ? 0.35 : 0.12)}px)`;
+      main.style.opacity = String(1 - Math.min(Math.abs(dx) / 700, 0.35));
+      if (target) {
+        hint.textContent = dx < 0 ? `${target.label} →` : `← ${target.label}`;
+        hint.classList.toggle('ready', Math.abs(dx) > 70);
+        hint.hidden = false;
+      }
+    }, { passive: true });
+    const end = (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = (e.changedTouches?.[0]?.clientX ?? sx) - sx;
+      const dir = dx < 0 ? 'left' : 'right';
+      const target = tabs[dx < 0 ? tabIdx + 1 : tabIdx - 1];
+      if (axis === 'x' && Math.abs(dx) > 70 && target) {
+        sessionStorage.setItem('swipe', dir);
+        main.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
+        main.style.transform = `translateX(${dx < 0 ? -80 : 80}px)`;
+        main.style.opacity = '0';
+        setTimeout(() => (location.href = target.href), 120);
+      } else {
+        reset();
+      }
+    };
+    addEventListener('touchend', end);
+    addEventListener('touchcancel', () => { tracking = false; reset(); });
+    addEventListener('pageshow', (e) => e.persisted && reset(false));
+  }
+
   /* ---------- Code copy ---------- */
   $$('.prose pre').forEach((pre) => {
     if (!navigator.clipboard) return;

@@ -14,18 +14,37 @@ async function resolveRedirect(url) {
 }
 
 const engines = {
+  // With TAVILY_API_KEY: 1,000 free credits/month. Without: keyless mode, capped per IP per day.
   async tavily(query, { days }) {
     const key = process.env.TAVILY_API_KEY;
-    if (!key) return null;
+    const headers = { 'content-type': 'application/json' };
+    if (key) headers.authorization = `Bearer ${key}`;
+    else headers['X-Tavily-Access-Mode'] = 'keyless';
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-      body: JSON.stringify({ api_key: key, query, topic: days ? 'news' : 'general', days, max_results: 8 }),
+      headers,
+      body: JSON.stringify({ query, topic: days ? 'news' : 'general', days, max_results: 8 }),
       signal: AbortSignal.timeout(30_000),
     });
-    if (!res.ok) throw new Error(`tavily HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`tavily${key ? '' : '(keyless)'} HTTP ${res.status}`);
     const data = await res.json();
-    return (data.results || []).map((x) => ({ title: x.title, url: x.url, snippet: truncate(x.content || '', 400) }));
+    return (data.results || []).map((x) => ({ title: x.title, url: x.url, date: x.published_date, snippet: truncate(x.content || '', 400) }));
+  },
+
+  async exa(query, { days }) {
+    const key = process.env.EXA_API_KEY;
+    if (!key) return null;
+    const body = { query, numResults: 8, contents: { text: { maxCharacters: 600 } } };
+    if (days) body.startPublishedDate = new Date(Date.now() - days * 86400_000).toISOString();
+    const res = await fetch('https://api.exa.ai/search', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) throw new Error(`exa HTTP ${res.status}`);
+    const data = await res.json();
+    return (data.results || []).map((x) => ({ title: x.title, url: x.url, date: x.publishedDate, snippet: truncate(x.text || '', 400) }));
   },
 
   async gemini(query, { days }) {

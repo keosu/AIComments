@@ -1,7 +1,7 @@
 {
   "$comment": "按 order 顺序尝试已配置密钥的提供方，失败自动回退。模型名可用环境变量覆盖：<NAME>_MODEL / <NAME>_MODEL_FAST（如 GEMINI_MODEL）；顺序可用 LLM_ORDER 覆盖（逗号分隔）。免费模型名单会变动，失效时改这里即可。",
   "order": ["gemini", "zhipu", "openrouter", "custom", "groq"],
-  "searchOrder": ["tavily", "hn"],
+  "searchOrder": ["tavily", "exa", "hn"],
   "providers": {
     "gemini": {
       "keyEnv": "GEMINI_API_KEY",

@@ -133,7 +133,10 @@ async function fromSearch(cfg, days) {
   for (const q of cfg.queries || []) {
     const results = await webSearch(q, { days });
     if (results[0]?.engine === 'hn') continue;
-    for (const r of results) out.push({ title: r.title || r.url, url: r.url, date: null, snippet: r.snippet, source: `搜索：${r.engine}`, kind: 'news', weight: 1.5 });
+    for (const r of results) {
+      const date = r.date && !isNaN(new Date(r.date)) ? new Date(r.date) : null;
+      out.push({ title: r.title || r.url, url: r.url, date, snippet: r.snippet, source: `搜索：${r.engine}`, kind: 'news', weight: 1.5 });
+    }
   }
   return out;
 }

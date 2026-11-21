@@ -19,9 +19,9 @@ export function materialsBlock(materials) {
 
 export function planPrompt({ date, days, candidates, recent, cfg }) {
   const lines = candidates
-    .map((c) => `${c.id} | ${c.source} | ${c.kind}${c.metric ? `(${c.metric})` : ''} | ${c.title} | ${truncate(c.snippet || '', 180)}`)
+    .map((c) => `${c.id} | ${c.date ? c.date.toISOString().slice(5, 10) : '--'} | ${c.source} | ${c.kind}${c.metric ? `(${c.metric})` : ''} | ${c.title} | ${truncate(c.snippet || '', 180)}`)
     .join('\n');
-  return `今天是 ${date}。下面是过去 ${days} 天从各信息源收集的候选条目，格式为：id | 来源 | 类型(热度) | 标题 | 摘要。
+  return `今天是 ${date}。下面是过去 ${days} 天从各信息源实时收集的候选条目，格式为：id | 日期 | 来源 | 类型(热度) | 标题 | 摘要。这些就是当前最新的动态；不要依赖你训练数据中的旧知识来判断“什么是最新的”，同等分量下优先选择更新的条目。
 
 请以主编身份为本期挑选内容：
 

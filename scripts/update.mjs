@@ -29,6 +29,7 @@ const seenPath = r('data', 'seen.json');
 const state = readJSON(statePath, { issue: 0, lastRun: null, lastPrimer: null, primers: [] });
 const seen = readJSON(seenPath, {});
 const today = dateInTZ(new Date(), U.timezone);
+const SYSTEM = `${EDITORIAL}\n\n今天是 ${today}。`;
 const report = [];
 const errors = [];
 let briefWritten = false;
@@ -71,7 +72,7 @@ async function gatherMaterials(cands, queries, budget, maxItems = 8) {
 // ---------- Steps ----------
 async function writeBriefs(items) {
   log(`撰写要闻（${items.length} 条）`);
-  const { data, model } = await chatJSON({ system: EDITORIAL, user: briefsPrompt(items), tier: 'fast' });
+  const { data, model } = await chatJSON({ system: SYSTEM, user: briefsPrompt(items), tier: 'fast' });
   const byId = new Map(items.map((c) => [c.id, c]));
   const out = (data.items || [])
     .filter((b) => byId.has(b.id) && b.title)
@@ -100,7 +101,7 @@ async function writeEssay(spec, byId) {
   const cands = (spec.ids || []).map((id) => byId.get(id)).filter(Boolean).slice(0, 6);
   const materials = await gatherMaterials(cands, (spec.queries || []).slice(0, 3), inputBudget(), 9);
   if (materials.length < 2) throw new Error(`评论材料不足：${spec.topic}`);
-  const { text, model } = await chat({ system: EDITORIAL, user: essayPrompt({ ...spec, materials }), tier: 'strong', temperature: 0.7 });
+  const { text, model } = await chat({ system: SYSTEM, user: essayPrompt({ ...spec, materials }), tier: 'strong', temperature: 0.7 });
   const a = parseArticle(text);
   if (!a.title || cjk(a.body) < MIN_CJK.essay) throw new Error(`评论质量不达标（${cjk(a.body)} 字）`);
   const { body, sources } = linkCitations(a.body, materials);
@@ -116,7 +117,7 @@ async function writeResearch(spec, byId) {
   const full = await fetchText(c.url, Math.max(6000, budget - 6000));
   const materials = [{ title: c.title, url: c.url, source: c.source, content: `${c.snippet ? `摘要：${c.snippet}\n` : ''}${full ? `正文节选：${full}` : ''}` }];
   if (materials[0].content.length < 600) throw new Error(`研究材料不足：${c.title}`);
-  const { text, model } = await chat({ system: EDITORIAL, user: researchPrompt({ why: spec.why || '', materials }), tier: 'strong', temperature: 0.5 });
+  const { text, model } = await chat({ system: SYSTEM, user: researchPrompt({ why: spec.why || '', materials }), tier: 'strong', temperature: 0.5 });
   const a = parseArticle(text);
   if (!a.title || cjk(a.body) < MIN_CJK.research) throw new Error(`研究解读质量不达标（${cjk(a.body)} 字）`);
   const { body, sources } = linkCitations(a.body, materials);
@@ -139,7 +140,7 @@ async function writeViewpoint(spec, byId) {
   const full = await fetchText(c.url, Math.max(6000, inputBudget() - 7000));
   if (full.length < 800) throw new Error(`人物观点材料不足（需要原文正文）：${c.title}`);
   const materials = [{ title: c.title, url: c.url, source: c.source, content: `${c.snippet ? `摘要：${c.snippet}\n` : ''}正文：${full}` }];
-  const { text, model } = await chat({ system: EDITORIAL, user: viewpointPrompt({ person: spec.person, why: spec.why || '', materials }), tier: 'strong', temperature: 0.5 });
+  const { text, model } = await chat({ system: SYSTEM, user: viewpointPrompt({ person: spec.person, why: spec.why || '', materials }), tier: 'strong', temperature: 0.5 });
   const a = parseArticle(text);
   const q = verifyQuotes(a.body, materials);
   if (q.dropped) log(`  引语核验：保留 ${q.kept}，删除 ${q.dropped} 处无法逐字核对的引语`);
@@ -174,7 +175,7 @@ async function writePrimer() {
   log(`撰写原理长文：${topic}`);
   const search = await webSearch(topic);
   const materials = search.filter((x) => x.engine !== 'hn').slice(0, 6).map((x) => ({ title: x.title || hostOf(x.url), url: x.url, source: hostOf(x.url), content: x.snippet }));
-  const { data: outline } = await chatJSON({ system: EDITORIAL, user: primerOutlinePrompt({ topic, materials }), tier: 'strong' });
+  const { data: outline } = await chatJSON({ system: SYSTEM, user: primerOutlinePrompt({ topic, materials }), tier: 'strong' });
   if (!outline?.sections?.length) throw new Error('原理长文大纲生成失败');
   outline.sections = outline.sections.slice(0, 8);
   const parts = [];
@@ -182,7 +183,7 @@ async function writePrimer() {
   for (let i = 0; i < outline.sections.length; i++) {
     log(`  第 ${i + 1}/${outline.sections.length} 节：${outline.sections[i].heading}`);
     const prevTail = parts.length ? parts.at(-1).slice(-300) : '';
-    const out = await chat({ system: EDITORIAL, user: primerSectionPrompt({ outline, index: i, prevTail, materials }), tier: 'strong', temperature: 0.5 });
+    const out = await chat({ system: SYSTEM, user: primerSectionPrompt({ outline, index: i, prevTail, materials }), tier: 'strong', temperature: 0.5 });
     model = out.model;
     let sec = out.text.replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
     if (!/^##\s/.test(sec)) sec = `## ${outline.sections[i].heading}\n\n${sec.replace(/^#+\s.*\n/, '')}`;
@@ -235,7 +236,7 @@ async function main() {
     log(`主编选题（${shown.length} 条候选）…`);
     let plan = { briefs: [], essays: [], research: [] };
     try {
-      plan = (await chatJSON({ system: EDITORIAL, user: planPrompt({ date: today, days: U.windowDays, candidates: shown, recent, cfg: U }), tier: 'fast' })).data;
+      plan = (await chatJSON({ system: SYSTEM, user: planPrompt({ date: today, days: U.windowDays, candidates: shown, recent, cfg: U }), tier: 'fast' })).data;
       shown.forEach((c) => usedKeys.add(c.key));
     } catch (e) {
       errors.push(`选题失败：${e.message}`);
